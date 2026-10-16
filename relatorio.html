@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Relatório Prático 2 — Máquina de Estado</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.38;
+    font-size: 9.6pt;
+    margin: 0;
+    padding: 0;
+  }
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    box-sizing: border-box;
+    padding: 11mm 13mm 11mm 13mm;
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child {
+    page-break-after: avoid;
+  }
+  .header-box {
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .inst-title {
+    font-size: 13.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+  }
+  .inst-sub {
+    font-size: 9.5pt;
+    color: #475569;
+    font-weight: 500;
+  }
+  .meta-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    font-size: 8.8pt;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1.3fr;
+    gap: 6px;
+  }
+  h1 {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #1e3a8a;
+    border-left: 4px solid #2563eb;
+    padding-left: 8px;
+    margin: 8px 0 5px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  h2 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 6px 0 3px 0;
+  }
+  p {
+    margin: 0 0 5px 0;
+    text-align: justify;
+  }
+  ul, ol {
+    margin: 0 0 5px 0;
+    padding-left: 18px;
+  }
+  li {
+    margin-bottom: 2px;
+  }
+  .figure-container {
+    text-align: center;
+    margin: 6px 0;
+  }
+  .figure-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .figure-caption {
+    font-size: 8.2pt;
+    color: #475569;
+    font-weight: 600;
+    margin-top: 3px;
+  }
+  .table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.2pt;
+    margin: 5px 0 6px 0;
+  }
+  .table-custom th, .table-custom td {
+    border: 1px solid #cbd5e1;
+    padding: 3.5px 5px;
+    text-align: left;
+  }
+  .table-custom th {
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .table-custom tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  .badge-pass {
+    color: #166534;
+    background: #dcfce7;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 7.5pt;
+    display: inline-block;
+  }
+  .highlight-card {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    padding: 5px 8px;
+    margin: 5px 0;
+    font-size: 8.8pt;
+    border-radius: 0 4px 4px 0;
+  }
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 5px 0;
+  }
+  .metric-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 5px;
+    text-align: center;
+  }
+  .metric-val {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #1e40af;
+  }
+  .metric-lbl {
+    font-size: 7.2pt;
+    color: #64748b;
+    text-transform: uppercase;
+  }
+  .page-footer {
+    position: absolute;
+    bottom: 8mm;
+    right: 13mm;
+    font-size: 8pt;
+    color: #64748b;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== PÁGINA 1 ==================== -->
+<div class="page">
+  <div class="header-box">
+    <div>
+      <div class="inst-title">Universidade de Fortaleza — UNIFOR</div>
+      <div class="inst-sub">Projeto de Redes Convergentes | Atividade Avaliativa 2 (Trabalho Prático 2)</div>
+    </div>
+    <div style="text-align: right; font-size: 8.5pt; color: #475569;">
+      <strong>Data:</strong> Outubro / 2026<br>
+      <strong>Tema:</strong> Máquina de Estado
+    </div>
+  </div>
+
+  <div class="meta-box">
+    <div><strong>Disciplina:</strong> Projeto de Redes Convergentes</div>
+    <div><strong>Professora:</strong> Ana Maria</div>
+    <div><strong>Aluno:</strong> Anderson Viana - 2410492</div>
+  </div>
+
+  <h1>1. Introdução e Objetivo do Trabalho</h1>
+  <p>
+    O transporte confiável na Internet é formalizado no Capítulo 3 do livro <em>Redes de Computadores e a Internet</em> (Kurose &amp; Ross) por meio de <strong>Máquinas de Estados Finitos (FSMs)</strong>. Enquanto o <strong>TCP</strong> utiliza uma FSM complexa de 11 estados com confirmação cumulativa, controle de fluxo, temporizadores dinâmicos e retransmissões, o <strong>UDP</strong> adota um paradigma sem conexão de estado único, provendo apenas multiplexação por portas e integridade por checksum.
+  </p>
+  <p>
+    <strong>Objetivo:</strong> Projetar e construir um simulador em Python com interface gráfica (GUI Tkinter) desacoplada do núcleo, dirigido por dados (FSM em JSON), capaz de executar, visualizar e auditar formalmente as FSMs sobre um canal com falhas configuráveis (perda, atraso, corrupção, duplicação e reordenação), validando as propriedades do protocolo contra os 10 cenários mínimos previstos no edital.
+  </p>
+
+  <h1>2. Arquitetura da Solução e Justificativa das Diferenças</h1>
+  <p>
+    A arquitetura implementada adota o padrão <strong>MVC (Model-View-Controller)</strong> desacoplado, garantindo que o núcleo opere sem dependência de módulos de tela, viabilizando execução remota e testes automatizados em milissegundos.
+  </p>
+
+  <div class="figure-container">
+    <img src="relatorio_imagens/arquitetura_solucao.png" style="max-height: 245px;">
+    <div class="figure-caption">Figura 1: Arquitetura completa da solução com desacoplamento MVC, relógio virtual e barramento de eventos.</div>
+  </div>
+
+  <p>
+    <strong>Justificativa das diferenças e aprimoramentos em relação ao modelo inicial do edital:</strong>
+  </p>
+  <ul>
+    <li><strong>Relógio Virtual por Agendamento Discreto (<code>Scheduler</code>):</strong> Diferente de implementações ingênuas baseadas em <code>time.sleep</code>, o simulador avança o relógio virtual por fila de prioridade (heap). Isso permite testar temporizadores de 60 segundos (ex.: TIME_WAIT de 2 &times; MSL) em menos de 0,1 segundo real de CPU com exatidão determinística.</li>
+    <li><strong>Barramento Unificado de Eventos (<code>EventBus</code>):</strong> O desacoplamento é absoluto: o núcleo emite eventos tipados (<code>transition</code>, <code>tx</code>, <code>rx</code>, <code>reject</code>, <code>drop</code>, <code>timer</code>, <code>rtt</code>, <code>dupack</code>) consumidos reativamente pela interface gráfica, pelo terminal e pelos testes.</li>
+    <li><strong>Canal Bidirecional Determinístico e Interativo:</strong> Suporta controle por semente pseudoaleatória (<code>seed</code>) e injeção de falhas cirúrgicas (botões da GUI para descartar/corromper o próximo segmento e regras de cenário para perdas programadas).</li>
+    <li><strong>Motor de FSM Orientado a Dados (JSON):</strong> O motor (<code>fsm.py</code>) não contém lógica hardcoded de rede. Transições são carregadas de arquivos JSON (<code>fsm_defs/</code>) com sintaxe <code>(estado, evento[condição]) → (ação, novo_estado)</code>, rejeitando formalmente qualquer transição inválida.</li>
+  </ul>
+  <div class="page-footer">Página 1 de 5</div>
+</div>
+
+<!-- ==================== PÁGINA 2 ==================== -->
+<div class="page">
+  <h1>3. Validação Visual na GUI: Cenários de Conexão</h1>
+  
+  <h2>3.1 Cenário 3: Perda do SYN-ACK no Handshake</h2>
+  <p>
+    No estabelecimento da conexão TCP (Handshake de 3 vias), o Host A envia um <code>SYN (SEQ=100)</code>. O Host B responde com <code>SYN+ACK (SEQ=300, ACK=101)</code>, mas o canal descarta esse segmento (marcado com um <strong>&times; vermelho</strong> no diagrama temporal).
+  </p>
+
+  <div class="figure-container">
+    <img src="relatorio_imagens/cenario_3_perda_synack.png" style="max-height: 245px;">
+    <div class="figure-caption">Figura 2: Captura da GUI no Cenário 3 — Perda do SYN-ACK, timeout de A e recuperação pelo reenvio do SYN-ACK em SYN_RCVD.</div>
+  </div>
+
+  <div class="highlight-card">
+    <strong>Dinâmica observada na execução:</strong>
+    Ao atingir o timeout de retransmissão (t = 1010 ms), o Host A dispara o evento <code>timeout</code> e retransmite o <code>SYN SEQ=100 (retx)</code> (seta laranja). O Host B, que já se encontrava no estado <code>SYN_RCVD</code>, recebe o SYN duplicado, aciona a auto-transição <code>SYN_RCVD --rcv_SYN / reenviar SYNACK--> SYN_RCVD</code> e envia uma cópia do SYN-ACK. Host A finalmente recebe o SYN-ACK, avança para <code>ESTABLISHED</code> e emite o terceiro segmento <code>ACK=301</code>, levando ambos a <code>ESTABLISHED</code> com sucesso.
+  </div>
+
+  <h2>3.2 Cenário 5: Fechamento Simultâneo de Conexão (CLOSING)</h2>
+  <p>
+    Ocorre quando ambas as aplicações decidem fechar a conexão simultaneamente (t = 1000 ms). Os segmentos <code>FIN</code> cruzam na rede antes que qualquer lado receba o FIN do outro.
+  </p>
+
+  <div class="figure-container">
+    <img src="relatorio_imagens/cenario_5_fechamento_simultaneo.png" style="max-height: 245px;">
+    <div class="figure-caption">Figura 3: Captura da GUI no Cenário 5 — Fechamento simultâneo com transição direta por CLOSING e TIME_WAIT.</div>
+  </div>
+
+  <div class="highlight-card">
+    <strong>Dinâmica observada na execução:</strong>
+    Ambos os hosts saem de <code>ESTABLISHED</code> para <code>FIN_WAIT_1</code> enviando FINs. Ao receber o FIN do par sem que o seu próprio FIN tenha sido confirmado (guarda <code>[!acks_fin]</code>), ambos transitam para o estado <strong>CLOSING</strong> e respondem com ACK. Em seguida, ao receberem os respectivos ACKs pendentes (guarda <code>[acks_fin &amp; time_wait_on]</code>), ambos avançam para <strong>TIME_WAIT</strong>, aguardando o temporizador de 2 &times; MSL (2000 ms virtuais) antes de finalizar em <code>CLOSED</code>. Nenhum dos dois lados passa por <code>CLOSE_WAIT</code> ou <code>LAST_ACK</code>.
+  </div>
+  <div class="page-footer">Página 2 de 5</div>
+</div>
+
+<!-- ==================== PÁGINA 3 ==================== -->
+<div class="page">
+  <h1>4. Transferência Confiável: Cenário 6 e Fast Retransmit</h1>
+  
+  <h2>4.1 Análise do Cenário 6: Perda de Segmento de Dados e Retransmissão Rápida</h2>
+  <p>
+    Neste cenário, o Host A envia uma rajada de 10 segmentos de dados (100 bytes cada, total de 1000 bytes) em t = 500 ms sobre um canal com atraso de 50 ms por sentido (RTT base de 100 ms). O canal descarta propositalmente o 5º segmento (<code>SEQ=501</code>).
+  </p>
+
+  <div class="figure-container">
+    <img src="relatorio_imagens/cenario_6_retransmissao_rapida.png" style="max-height: 270px;">
+    <div class="figure-caption">Figura 4: Captura da GUI no Cenário 6 — Detecção de perda por 3 ACKs duplicados e disparo imediato do Fast Retransmit (SEQ=501).</div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-val">100 ms</div>
+      <div class="metric-lbl">EstimatedRTT</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">37,5 ms</div>
+      <div class="metric-lbl">DevRTT</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">250 ms</div>
+      <div class="metric-lbl">TimeoutInterval (RTO)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val">250 ms (71%)</div>
+      <div class="metric-lbl">Tempo Economizado</div>
+    </div>
+  </div>
+
+  <h2>4.2 Funcionamento Detalhado e Medição do Ganho de Desempenho</h2>
+  <p>
+    Os quatro primeiros segmentos chegam intactos e geram ACKs cumulativos progressivos (<code>ACK=201, 301, 401, 501</code>). Quando os segmentos 6 a 10 chegam ao Host B, este constata uma lacuna na sequência de bytes recebidos. Conforme preconiza a RFC 793 e a Seção 3.5.4 do livro, o receptor armazena os dados fora de ordem no buffer e emite <strong>ACKs cumulativos repetidos</strong> indicando o último byte consecutivo (<code>ACK=501</code>).
+  </p>
+  <ul>
+    <li>Em t = 600 ms, o Host A recebe o <strong>3º ACK duplicado</strong> (evento <code>dupack3</code> no log).</li>
+    <li>Sem aguardar o estouro do temporizador de retransmissão, o algoritmo de <strong>Retransmissão Rápida</strong> é acionado imediatamente, reenviando <code>SEQ=501</code> (seta laranja).</li>
+    <li>Em t = 650 ms, o Host B recebe o segmento faltante, reorganiza o buffer e confirma de uma só vez todos os 1000 bytes através de <code>ACK=1101</code>.</li>
+  </ul>
+
+  <table class="table-custom">
+    <thead>
+      <tr>
+        <th>Métrica Avaliada</th>
+        <th>Com Retransmissão Rápida</th>
+        <th>Apenas Timeout (Sem Fast Retx)</th>
+        <th>Diferença / Economia Real</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Momento da Retransmissão de SEQ=501</strong></td>
+        <td><strong>t = 600,0 ms</strong></td>
+        <td>t = 850,0 ms</td>
+        <td><strong>Economia de 250,0 ms</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Conclusão da Entrega dos 1000 Bytes</strong></td>
+        <td><strong>t = 650,0 ms</strong></td>
+        <td>t = 900,0 ms</td>
+        <td><strong>Economia de 250,0 ms</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Tempo de Recuperação após o Envio</strong></td>
+        <td><strong>100,0 ms (1 RTT)</strong></td>
+        <td>350,0 ms (1 RTT + RTO)</td>
+        <td><strong>Recuperação 71,4% mais rápida</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size: 8.2pt; color: #475569;">
+    <em>Cálculo do RTO:</em> Com amostra de RTT = 100 ms e DevRTT = 37,5 ms, TimeoutInterval = 100 + 4 &times; 37,5 = 250 ms. Como o timer foi reiniciado com o último ACK novo em t = 600 ms, o timeout só dispararia em t = 850 ms. O Fast Retransmit poupou exatamente o intervalo do RTO inteiro.
+  </p>
+  <div class="page-footer">Página 3 de 5</div>
+</div>
+
+<!-- ==================== PÁGINA 4 ==================== -->
+<div class="page">
+  <h1>5. Análise Comparativa: UDP &times; TCP (Cenário 10)</h1>
+  
+  <h2>5.1 Execução Lado a Lado sob Canal Idêntico e Ruidoso</h2>
+  <p>
+    No Cenário 10, ambos os protocolos são submetidos à mesma carga (50 blocos de 100 bytes = 5000 bytes) sob canal idêntico com falhas estocásticas: <strong>10% de perda, atraso de 20 a 60 ms, 3% de corrupção, 5% de duplicação e 10% de reordenação</strong> com a mesma semente (<code>seed=1</code>).
+  </p>
+
+  <div class="figure-container">
+    <img src="relatorio_imagens/cenario_10_udp_vs_tcp.png" style="max-height: 250px;">
+    <div class="figure-caption">Figura 5: Captura da GUI no Cenário 10 — Comparação visual simultânea: UDP à esquerda e TCP à direita.</div>
+  </div>
+
+  <h2>5.2 Relatório de Métricas e Análise Estatística (20 Sementes Aleatórias)</h2>
+  <p>
+    Para comprovar o determinismo e a consistência dos resultados frente a variações aleatórias, o teste foi repetido automaticamente sobre 20 sementes independentes (função <code>compare_many_seeds(20)</code> do simulador):
+  </p>
+
+  <table class="table-custom">
+    <thead>
+      <tr>
+        <th>Métrica Avaliada</th>
+        <th>UDP (Seed 1)</th>
+        <th>TCP (Seed 1)</th>
+        <th>UDP (Média 20 Seeds)</th>
+        <th>TCP (Média 20 Seeds)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Blocos Enviados</strong></td>
+        <td>50</td>
+        <td>50</td>
+        <td>50,0</td>
+        <td>50,0</td>
+      </tr>
+      <tr>
+        <td><strong>Entregues à Aplicação</strong></td>
+        <td>46 (44 únicos)</td>
+        <td><strong>50 (100% íntegros)</strong></td>
+        <td>45,4 (43,4 únicos)</td>
+        <td><strong>50,0 (100% íntegros)</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Pacotes Perdidos</strong></td>
+        <td>6 (12%)</td>
+        <td><strong>0 (zero)</strong></td>
+        <td>6,55 (13,1%)</td>
+        <td><strong>0,0 (zero)</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Pacotes Duplicados Entregues</strong></td>
+        <td>2 duplicatas</td>
+        <td><strong>0 (descartados)</strong></td>
+        <td>1,95 duplicatas</td>
+        <td><strong>0,0 (descartados)</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Pacotes Fora de Ordem</strong></td>
+        <td>18 blocos</td>
+        <td><strong>0 (reordenados)</strong></td>
+        <td>15,05 blocos</td>
+        <td><strong>0,0 (reordenados)</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Ordem Perfeita de Sequência</strong></td>
+        <td><span style="color:#dc2626; font-weight:600;">NÃO (Falhou)</span></td>
+        <td><span style="color:#16a34a; font-weight:600;">SIM (100%)</span></td>
+        <td>0 de 20 testes OK</td>
+        <td><strong>20 de 20 testes OK</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Tempo Total da Transmissão</strong></td>
+        <td><strong>536,0 ms</strong></td>
+        <td>3.915,9 ms</td>
+        <td><strong>555,8 ms</strong></td>
+        <td>4.010,2 ms (mediana)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-card">
+    <strong>Discussão sobre o Custo da Confiabilidade:</strong>
+    O UDP concluiu sua transmissão em apenas <strong>536 ms</strong>, mas a aplicação recebeu dados mutilados: perdeu 6 blocos, recebeu 2 cópias duplicadas e teve 18 blocos fora de ordem. Já o TCP gastou <strong>3.915 ms</strong> (cerca de 7 vezes mais tempo) devido às retransmissões (8 por timeout e 1 rápida) e ao controle de fluxo, porém entregou os 5000 bytes <strong>sem nenhuma lacuna, sem duplicatas e rigorosamente na ordem correta</strong>. Isso ilustra claramente a relação de compromisso (trade-off) entre latência mínima e garantia de entrega.
+  </div>
+  <div class="page-footer">Página 4 de 5</div>
+</div>
+
+<!-- ==================== PÁGINA 5 ==================== -->
+<div class="page">
+  <h1>6. Respostas Formais às Perguntas do Relatório (Seção 9)</h1>
+
+  <p style="margin-bottom: 3px;"><strong>1) Por que o estado TIME_WAIT existe e o que acontece se ele for removido no cenário 4?</strong><br>
+    O <code>TIME_WAIT</code> dura 2 &times; MSL no lado que iniciou o encerramento (Host A) e cumpre dois papéis vitais:
+    <em>(a) Fechamento Confiável:</em> O último ACK pode se perder na rede. Se isso ocorrer, B em <code>LAST_ACK</code> estoura o timeout e retransmite o FIN. Em TIME_WAIT, A reenvia o ACK e reinicia o timer. <em>(b) Drenagem de Segmentos Fantasmas:</em> Evita que pacotes atrasados interfiram em uma nova conexão que reutilize o mesmo par de portas.
+    <em>Resultado da remoção (Cenário E2 vs E3):</em> Sem TIME_WAIT, A vai direto para <code>CLOSED</code>. Quando o último ACK se perde, B retransmite o FIN e A responde com <code>RST</code> (conexão recusada), fazendo B encerrar com erro (<code>rcv_RST</code>) em vez de um encerramento limpo.
+  </p>
+
+  <p style="margin-bottom: 3px;"><strong>2) Por que o UDP não precisa de FSM de conexão e quais responsabilidades sobram para a aplicação?</strong><br>
+    O UDP é sem conexão: não mantém estado compartilhado (SEQ, ACK, buffers, janelas) para sincronizar entre remetente e receptor. Sua "FSM" possui um <strong>único estado (ATIVO)</strong> com auto-laços de envio e descarte silencioso em erro de checksum. As responsabilidades transferidas para a aplicação incluem: recuperação de perdas (ACKs/timeouts próprios), descarte de duplicatas, reordenação de dados, controle de congestionamento e fragmentação.
+  </p>
+
+  <p style="margin-bottom: 3px;"><strong>3) No cenário 6, quanto tempo a retransmissão rápida economizou em relação ao timeout?</strong><br>
+    A economia exata medida no simulador foi de <strong>250,0 ms</strong> tanto no instante da retransmissão (de 850 ms para 600 ms) quanto na conclusão da entrega (de 900 ms para 650 ms). Em termos relativos, o tempo de recuperação caiu de 350 ms para 100 ms (<strong>redução de 71,4%</strong>), pois a perda foi corrigida em exatamente 1 RTT após o envio original, sem aguardar o estouro do temporizador de retransmissão.
+  </p>
+
+  <p style="margin-bottom: 4px;"><strong>4) Quais transições do diagrama do livro foram mais difíceis de reproduzir e por quê?</strong><br>
+    <em>(a) Fechamento simultâneo:</em> O livro desenha a mesma seta "recebe FIN" saindo de <code>FIN_WAIT_1</code> para dois destinos. Foi preciso criar a guarda interna <code>acks_fin</code> para diferenciar se o segmento também confirmava o FIN local (indo para TIME_WAIT) ou se era um FIN cruzado puro (indo para CLOSING).
+    <em>(b) SYN duplicado em SYN_RCVD (Cenário 3):</em> O livro omite o que fazer quando o SYN-ACK se perde. Foi necessário modelar a auto-transição explícita que reenvia o SYN-ACK.
+    <em>(c) Eventos implícitos de timeout e RST:</em> O livro só desenha o fluxo ideal. A FSM real em JSON demandou 75 regras de transição para cobrir timeouts com backoff, 3 dupACKs e segmentos RST em portas fechadas.
+  </p>
+
+  <h1 style="margin-top: 4px;">7. Quadro Geral de Validação dos 10 Cenários Mínimos</h1>
+  <table class="table-custom" style="margin-bottom: 4px;">
+    <thead>
+      <tr>
+        <th style="width: 25px;">#</th>
+        <th style="width: 45px;">Proto</th>
+        <th>Cenário Avaliado</th>
+        <th>Comportamento Esperado</th>
+        <th style="width: 70px; text-align: center;">Resultado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td><td>TCP</td><td>Handshake sem falhas</td><td>A: CLOSED&rarr;SYN_SENT&rarr;ESTABLISHED; B: LISTEN&rarr;SYN_RCVD&rarr;ESTABLISHED</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>TCP</td><td>Perda do SYN</td><td>Timeout e retransmissão do SYN (SEQ=100)</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>3</td><td>TCP</td><td>Perda do SYN-ACK</td><td>Cliente retransmite SYN; servidor reenvia SYN-ACK em SYN_RCVD</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>4</td><td>TCP</td><td>Encerramento normal</td><td>A passa por FIN_WAIT_1, FIN_WAIT_2, TIME_WAIT; B por CLOSE_WAIT, LAST_ACK</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>5</td><td>TCP</td><td>Fechamento simultâneo</td><td>Ambos passam por FIN_WAIT_1&rarr;CLOSING&rarr;TIME_WAIT (sem CLOSE_WAIT)</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>6</td><td>TCP</td><td>Perda de segmento</td><td>3 ACKs duplicados geram Fast Retransmit imediato sem esperar timeout</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>7</td><td>TCP</td><td>Porta fechada</td><td>Servidor responde com segmento RST e permanece em CLOSED</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>8</td><td>UDP</td><td>20 datagramas (30% perda)</td><td>Datagramas perdidos não são recuperados; nenhuma retransmissão</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>9</td><td>UDP</td><td>Checksum corrompido</td><td>Receptor descarta silenciosamente o datagrama sem notificar remetente</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+      <tr>
+        <td>10</td><td>Ambos</td><td>UDP vs TCP mesma carga</td><td>Relatório comparando perdas, duplicatas, reordenação e tempo total</td><td style="text-align: center;"><span class="badge-pass">APROVADO</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size: 8pt; text-align: center; color: #475569; margin: 2px 0 0 0;">
+    <strong>Conclusão:</strong> Todos os requisitos funcionais, não-funcionais e arquiteturais foram plenamente atendidos.
+  </p>
+  <div class="page-footer">Página 5 de 5</div>
+</div>
+
+</body>
+</html>

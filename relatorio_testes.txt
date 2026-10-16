@@ -1,0 +1,123 @@
+RELATÓRIO DE TESTES AUTOMATIZADOS — Máquina de Estado
+========================================================================
+
+[APROVADO] Cenário 1 — TCP — Handshake sem falhas
+    esperado: A: CLOSED→SYN_SENT→ESTABLISHED; B: LISTEN→SYN_RCVD→ESTABLISHED
+      ✔ A: CLOSED→SYN_SENT→ESTABLISHED
+      ✔ B: LISTEN→SYN_RCVD→ESTABLISHED
+      ✔ SYN com SEQ=100
+      ✔ SYNACK com SEQ=300 e ACK=101
+      ✔ 3º segmento: ACK=301
+
+[APROVADO] Cenário 2 — TCP — Perda do SYN
+    esperado: Timeout e retransmissão do SYN
+      ✔ o 1º SYN foi perdido pelo canal
+      ✔ SYN retransmitido (2 envios, o 2º marcado retx)
+      ✔ retransmissão após o timeout inicial (1000 ms)
+      ✔ evento 'timeout' disparado na FSM de A
+      ✔ conexão estabelecida nos dois lados
+
+[APROVADO] Cenário 3 — TCP — Perda do SYN-ACK
+    esperado: Cliente retransmite o SYN; servidor reenvia o SYN-ACK
+      ✔ 1º SYNACK perdido
+      ✔ cliente retransmite o SYN
+      ✔ servidor reenvia o SYNACK ao receber o SYN duplicado
+      ✔ B tratou SYN duplicado em SYN_RCVD
+      ✔ A: CLOSED→SYN_SENT→ESTABLISHED
+      ✔ B: LISTEN→SYN_RCVD→ESTABLISHED
+
+[APROVADO] Cenário 4 — TCP — Encerramento normal
+    esperado: A: FIN_WAIT_1, FIN_WAIT_2, TIME_WAIT; B: CLOSE_WAIT, LAST_ACK
+      ✔ A: …ESTABLISHED→FIN_WAIT_1→FIN_WAIT_2→TIME_WAIT→CLOSED
+      ✔ B: …ESTABLISHED→CLOSE_WAIT→LAST_ACK→CLOSED
+      ✔ TIME_WAIT durou 2×MSL (2000 ms)
+
+[APROVADO] Cenário 5 — TCP — Fechamento simultâneo
+    esperado: Ambos: FIN_WAIT_1→CLOSING→TIME_WAIT
+      ✔ A: FIN_WAIT_1→CLOSING→TIME_WAIT
+      ✔ B: FIN_WAIT_1→CLOSING→TIME_WAIT
+      ✔ nenhum lado passou por CLOSE_WAIT/LAST_ACK
+
+[APROVADO] Cenário 6 — TCP — Perda de 1 segmento de dados (de 10)
+    esperado: 3 ACKs duplicados e retransmissão rápida, sem esperar o timeout
+      ✔ B recebeu os 1000 bytes completos e em ordem
+      ✔ o segmento do meio foi perdido pelo canal
+      ✔ ≥3 ACKs duplicados recebidos por A
+      ✔ exatamente 1 retransmissão rápida do SEQ perdido
+      ✔ nenhuma retransmissão por timeout
+      ✔ retransmissão rápida ocorreu antes do timeout teria expirado
+      ✔ transferência terminou mais cedo que só com timeout
+    economia da retransmissão rápida: {"t_envio_original": 500.0, "t_retx_rapida": 600.0, "t_retx_timeout": 850.0, "economia_na_retransmissao": 250.0, "conclusao_com_fast": 650.0, "conclusao_so_timeout": 900.0, "economia_total": 250.0, "rto_no_momento": 250.0}
+
+[APROVADO] Cenário 7 — TCP — Conexão a uma porta fechada
+    esperado: Resposta RST
+      ✔ B respondeu com RST
+      ✔ RST confirma o SYN (ACK=101)
+      ✔ B permaneceu em CLOSED
+      ✔ A: CLOSED→SYN_SENT→CLOSED (conexão recusada)
+      ✔ SYN não foi retransmitido
+
+[APROVADO] Cenário 8 — UDP — 20 datagramas com 30% de perda
+    esperado: Perdidos não são recuperados; nenhuma retransmissão
+      ✔ 20 datagramas enviados
+      ✔ houve perdas (≈30%)
+      ✔ entregues + perdidos = 20 (perdidos NÃO foram recuperados)
+      ✔ nenhuma retransmissão: cada datagrama enviado uma única vez
+      ✔ receptor não enviou nada de volta
+
+[APROVADO] Cenário 9 — UDP — Datagrama com checksum corrompido
+    esperado: Descartado pelo receptor, sem notificação
+      ✔ datagrama corrompido foi descartado (checksum)
+      ✔ só 2 de 3 chegaram à aplicação
+      ✔ nenhuma notificação ao remetente
+      ✔ o checksum do receptor realmente falhou
+
+[APROVADO] Cenário 10 — UDP vs TCP — Mesma carga, mesmo canal ruidoso
+    esperado: Relatório: entregues, perdidos, duplicados, em ordem, tempo total
+      ✔ mesma carga: 50 blocos de 100 bytes nos dois protocolos
+      ✔ TCP entregou tudo, sem lacunas
+      ✔ TCP entregou na ordem exata, sem duplicatas
+      ✔ UDP perdeu datagramas (sem recuperação)
+      ✔ UDP deixou passar duplicatas e/ou reordenação
+      ✔ TCP gastou mais tempo que o UDP (custo da confiabilidade)
+
+métrica                        UDP       TCP
+--------------------------------------------
+enviados                        50        50
+entregues à aplicação           46        50
+únicos                          44        50
+perdidos                         6         0
+duplicados                       2         0
+em ordem                        26        50
+fora de ordem                   18         0
+sequência perfeita           False      True
+tempo total (ms)             536.0    3915.9
+--------------------------------------------
+canal (UDP): {'sent': 50, 'lost': 4, 'corrupted': 2, 'duplicated': 2, 'reordered': 5, 'delivered': 48}
+canal (TCP): {'sent': 115, 'lost': 11, 'corrupted': 4, 'duplicated': 4, 'reordered': 9, 'delivered': 108}
+TCP retransmissões: {'timeout': 8, 'rapidas': 1}
+
+    (repetido com 20 seeds) {"n": 20, "UDP": {"perdidos": {"media": 6.55, "mediana": 6.0, "minimo": 2, "maximo": 11}, "duplicados": {"media": 1.95, "mediana": 1.5, "minimo": 0, "maximo": 5}, "fora_de_ordem": {"media": 15.05, "mediana": 15.0, "minimo": 9, "maximo": 22}, "tempo_total_ms": {"media": 555.77, "mediana": 543.95, "minimo": 524.4, "maximo": 641.0}}, "TCP": {"perdidos": {"media": 0, "mediana": 0.0, "minimo": 0, "maximo": 0}, "duplicados": {"media": 0, "mediana": 0.0, "minimo": 0, "maximo": 0}, "fora_de_ordem": {"media": 0, "mediana": 0.0, "minimo": 0, "maximo": 0}, "tempo_total_ms": {"media": 9022.84, "mediana": 4010.2, "minimo": 959.7, "maximo": 95909.6}}, "tcp_entregou_tudo": 20, "udp_entregou_tudo": 0}
+
+[APROVADO] Cenário E1 — UDP — [extra] Duplicação e reordenação no UDP
+    esperado: Chegam à aplicação sem correção
+      ✔ duplicata (1 aparece 2x) chega à aplicação
+      ✔ reordenação (2 chega depois de 3 e 4) chega à aplicação sem correção
+      ✔ nada foi corrigido: sequência entregue = [0, 1, 1, 3, 4, 2]
+
+[APROVADO] Cenário E2 — TCP — [extra] SEM TIME_WAIT + último ACK perdido
+    esperado: B recebe RST (encerramento anormal)
+      ✔ sem TIME_WAIT: A vai direto a CLOSED
+      ✔ ACK final perdido → B retransmite FIN
+      ✔ A (já CLOSED) responde RST ao FIN retransmitido
+      ✔ B encerra de forma anormal (rcv_RST)
+
+[APROVADO] Cenário E3 — TCP — [extra] COM TIME_WAIT + último ACK perdido
+    esperado: A reenvia ACK; encerramento limpo
+      ✔ com TIME_WAIT: A passa por TIME_WAIT
+      ✔ A reenvia o ACK ao receber o FIN retransmitido
+      ✔ nenhum RST
+      ✔ B termina de forma limpa (LAST_ACK→CLOSED por ACK)
+
+========================================================================
+Cenários obrigatórios: 10 | resultado geral: APROVADO

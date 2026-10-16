@@ -1,0 +1,11 @@
+{
+  "name": "rdt1.0 remetente",
+  "description": "Fig. 3.9(a): canal perfeito. Um estado; rdt_send(data) / make_pkt + udt_send.",
+  "initial": "ESPERA_CHAMADA_DE_CIMA",
+  "states": ["ESPERA_CHAMADA_DE_CIMA"],
+  "layout": {"ESPERA_CHAMADA_DE_CIMA": [380, 150]},
+  "transitions": [
+    {"from": "ESPERA_CHAMADA_DE_CIMA", "event": "rdt_send", "action": "packet = make_pkt(data); udt_send(packet)",
+     "do": ["make_pkt", "udt_send"], "to": "ESPERA_CHAMADA_DE_CIMA", "main": true}
+  ]
+}

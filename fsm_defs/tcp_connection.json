@@ -1,0 +1,73 @@
+{
+  "name": "TCP",
+  "description": "FSM de conexao do TCP (figuras 3.41 e 3.42) + eventos de transferencia confiavel (timeout, 3 ACKs duplicados).",
+  "initial": "CLOSED",
+  "states": ["CLOSED","LISTEN","SYN_SENT","SYN_RCVD","ESTABLISHED","FIN_WAIT_1","FIN_WAIT_2","CLOSING","TIME_WAIT","CLOSE_WAIT","LAST_ACK"],
+  "layout": {
+    "CLOSED": [380, 45], "SYN_SENT": [110, 125], "LISTEN": [650, 125], "SYN_RCVD": [650, 225],
+    "ESTABLISHED": [380, 255], "FIN_WAIT_1": [110, 345], "CLOSE_WAIT": [650, 345],
+    "FIN_WAIT_2": [110, 440], "LAST_ACK": [610, 440], "CLOSING": [380, 400], "TIME_WAIT": [200, 520]
+  },
+  "transitions": [
+    {"from": "CLOSED", "event": "passive_open", "action": "criar TCB", "do": [], "to": "LISTEN", "main": true},
+    {"from": "CLOSED", "event": "active_open", "action": "enviar SYN", "do": ["init_active", "send:SYN"], "to": "SYN_SENT", "main": true},
+    {"from": "CLOSED", "event": ["rcv_SYN","rcv_SYNACK","rcv_ACK","rcv_DATA","rcv_FIN"], "action": "porta fechada: enviar RST", "do": ["send_rst"], "to": "CLOSED"},
+    {"from": "CLOSED", "event": "rcv_RST", "action": "ignorar", "do": [], "to": "CLOSED"},
+
+    {"from": "LISTEN", "event": "rcv_SYN", "action": "enviar SYNACK", "do": ["init_passive", "send:SYNACK"], "to": "SYN_RCVD", "main": true},
+    {"from": "LISTEN", "event": "active_open", "action": "enviar SYN", "do": ["init_active", "send:SYN"], "to": "SYN_SENT"},
+    {"from": "LISTEN", "event": "close", "action": "apagar TCB", "do": ["delete_tcb"], "to": "CLOSED", "main": true},
+    {"from": "LISTEN", "event": "rcv_RST", "action": "ignorar", "do": [], "to": "LISTEN"},
+
+    {"from": "SYN_SENT", "event": "rcv_SYNACK", "guard": "ack_of_syn", "action": "enviar ACK", "do": ["set_irs", "process_ack", "send:ACK"], "to": "ESTABLISHED", "main": true},
+    {"from": "SYN_SENT", "event": "rcv_SYN", "action": "enviar SYNACK (abertura simultanea)", "do": ["set_irs", "send:SYNACK"], "to": "SYN_RCVD", "main": true},
+    {"from": "SYN_SENT", "event": "rcv_RST", "action": "conexao recusada", "do": ["delete_tcb"], "to": "CLOSED", "main": true},
+    {"from": "SYN_SENT", "event": "close", "action": "apagar TCB", "do": ["delete_tcb"], "to": "CLOSED"},
+
+    {"from": "SYN_RCVD", "event": "rcv_ACK", "guard": "ack_of_syn", "action": "-", "do": ["process_ack"], "to": "ESTABLISHED", "main": true},
+    {"from": "SYN_RCVD", "event": "rcv_DATA", "guard": "ack_of_syn", "action": "entregar dados", "do": ["process_ack", "process_data"], "to": "ESTABLISHED"},
+    {"from": "SYN_RCVD", "event": "rcv_SYNACK", "guard": "ack_of_syn", "action": "enviar ACK", "do": ["process_ack", "send:ACK"], "to": "ESTABLISHED"},
+    {"from": "SYN_RCVD", "event": "rcv_SYN", "action": "reenviar SYNACK (SYN duplicado)", "do": ["send:SYNACK"], "to": "SYN_RCVD"},
+    {"from": "SYN_RCVD", "event": "close", "action": "enviar FIN", "do": ["send:FIN"], "to": "FIN_WAIT_1"},
+    {"from": "SYN_RCVD", "event": "rcv_RST", "action": "abortar", "do": ["delete_tcb"], "to": "CLOSED"},
+
+    {"from": "ESTABLISHED", "event": "rcv_ACK", "action": "processar ACK", "do": ["process_ack"], "to": "ESTABLISHED"},
+    {"from": "ESTABLISHED", "event": "rcv_DATA", "action": "entregar dados + ACK", "do": ["process_ack", "process_data"], "to": "ESTABLISHED"},
+    {"from": "ESTABLISHED", "event": "rcv_FIN", "action": "enviar ACK", "do": ["process_ack", "process_fin", "send:ACK"], "to": "CLOSE_WAIT", "main": true},
+    {"from": "ESTABLISHED", "event": "close", "action": "enviar FIN", "do": ["send:FIN"], "to": "FIN_WAIT_1", "main": true},
+    {"from": "ESTABLISHED", "event": ["rcv_SYN","rcv_SYNACK"], "action": "reenviar ACK (duplicado)", "do": ["send:ACK"], "to": "ESTABLISHED"},
+
+    {"from": "FIN_WAIT_1", "event": "rcv_ACK", "guard": "acks_fin", "action": "-", "do": ["process_ack"], "to": "FIN_WAIT_2", "main": true},
+    {"from": "FIN_WAIT_1", "event": "rcv_ACK", "guard": "!acks_fin", "action": "processar ACK", "do": ["process_ack"], "to": "FIN_WAIT_1"},
+    {"from": "FIN_WAIT_1", "event": "rcv_DATA", "action": "entregar dados + ACK", "do": ["process_ack", "process_data"], "to": "FIN_WAIT_1"},
+    {"from": "FIN_WAIT_1", "event": "rcv_FIN", "guard": "!acks_fin", "action": "enviar ACK (fechamento simultaneo)", "do": ["process_ack", "process_fin", "send:ACK"], "to": "CLOSING", "main": true},
+    {"from": "FIN_WAIT_1", "event": "rcv_FIN", "guard": "acks_fin & time_wait_on", "action": "enviar ACK; timer 2MSL", "do": ["process_ack", "process_fin", "send:ACK", "start_timer:2msl"], "to": "TIME_WAIT"},
+    {"from": "FIN_WAIT_1", "event": "rcv_FIN", "guard": "acks_fin & time_wait_off", "action": "enviar ACK (sem TIME_WAIT)", "do": ["process_ack", "process_fin", "send:ACK", "delete_tcb"], "to": "CLOSED"},
+
+    {"from": "FIN_WAIT_2", "event": "rcv_FIN", "guard": "time_wait_on", "action": "enviar ACK; timer 2MSL", "do": ["process_fin", "send:ACK", "start_timer:2msl"], "to": "TIME_WAIT", "main": true},
+    {"from": "FIN_WAIT_2", "event": "rcv_FIN", "guard": "time_wait_off", "action": "enviar ACK (sem TIME_WAIT)", "do": ["process_fin", "send:ACK", "delete_tcb"], "to": "CLOSED"},
+    {"from": "FIN_WAIT_2", "event": "rcv_DATA", "action": "entregar dados + ACK", "do": ["process_ack", "process_data"], "to": "FIN_WAIT_2"},
+    {"from": "FIN_WAIT_2", "event": "rcv_ACK", "action": "processar ACK", "do": ["process_ack"], "to": "FIN_WAIT_2"},
+
+    {"from": "CLOSING", "event": "rcv_ACK", "guard": "acks_fin & time_wait_on", "action": "timer 2MSL", "do": ["process_ack", "start_timer:2msl"], "to": "TIME_WAIT", "main": true},
+    {"from": "CLOSING", "event": "rcv_ACK", "guard": "acks_fin & time_wait_off", "action": "apagar TCB", "do": ["process_ack", "delete_tcb"], "to": "CLOSED"},
+    {"from": "CLOSING", "event": "rcv_ACK", "guard": "!acks_fin", "action": "processar ACK", "do": ["process_ack"], "to": "CLOSING"},
+    {"from": "CLOSING", "event": "rcv_FIN", "action": "reenviar ACK (FIN duplicado)", "do": ["send:ACK"], "to": "CLOSING"},
+
+    {"from": "TIME_WAIT", "event": "timeout_2msl", "action": "apagar TCB", "do": ["delete_tcb"], "to": "CLOSED", "main": true},
+    {"from": "TIME_WAIT", "event": "rcv_FIN", "action": "reenviar ACK; reiniciar 2MSL", "do": ["send:ACK", "restart_timer:2msl"], "to": "TIME_WAIT"},
+
+    {"from": "CLOSE_WAIT", "event": "close", "action": "enviar FIN", "do": ["send:FIN"], "to": "LAST_ACK", "main": true},
+    {"from": "CLOSE_WAIT", "event": "rcv_ACK", "action": "processar ACK", "do": ["process_ack"], "to": "CLOSE_WAIT"},
+    {"from": "CLOSE_WAIT", "event": "rcv_FIN", "action": "reenviar ACK (FIN duplicado)", "do": ["send:ACK"], "to": "CLOSE_WAIT"},
+
+    {"from": "LAST_ACK", "event": "rcv_ACK", "guard": "acks_fin", "action": "apagar TCB", "do": ["process_ack", "delete_tcb"], "to": "CLOSED", "main": true},
+    {"from": "LAST_ACK", "event": "rcv_ACK", "guard": "!acks_fin", "action": "processar ACK", "do": ["process_ack"], "to": "LAST_ACK"},
+    {"from": "LAST_ACK", "event": "rcv_FIN", "action": "reenviar ACK (FIN duplicado)", "do": ["send:ACK"], "to": "LAST_ACK"},
+
+    {"from": ["SYN_SENT","SYN_RCVD","ESTABLISHED","FIN_WAIT_1","CLOSING","CLOSE_WAIT","LAST_ACK"], "event": "timeout", "guard": "retx_ok", "action": "retransmitir segmento mais antigo; dobrar timeout", "do": ["retransmit:timeout"], "to": "SAME"},
+    {"from": ["SYN_SENT","SYN_RCVD","ESTABLISHED","FIN_WAIT_1","CLOSING","CLOSE_WAIT","LAST_ACK"], "event": "timeout", "guard": "retx_exhausted", "action": "desistir da conexao", "do": ["delete_tcb"], "to": "CLOSED"},
+    {"from": ["ESTABLISHED","FIN_WAIT_1","CLOSE_WAIT","CLOSING","LAST_ACK"], "event": "dupack3", "action": "retransmissao rapida", "do": ["retransmit:fast"], "to": "SAME"},
+    {"from": ["ESTABLISHED","FIN_WAIT_1","FIN_WAIT_2","CLOSING","CLOSE_WAIT","LAST_ACK"], "event": "rcv_RST", "action": "conexao resetada", "do": ["delete_tcb"], "to": "CLOSED"}
+  ]
+}

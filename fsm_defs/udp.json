@@ -1,0 +1,18 @@
+{
+  "name": "UDP",
+  "description": "UDP é sem conexão: um único estado, sem handshake e sem retransmissão. Só multiplexação (portas) e checksum.",
+  "initial": "ATIVO",
+  "states": ["ATIVO"],
+  "layout": {"ATIVO": [380, 150]},
+  "transitions": [
+    {"from": "ATIVO", "event": "app_send", "guard": null,
+     "action": "montar datagrama (portas, comprimento, checksum) e enviar",
+     "do": ["send_datagram"], "to": "ATIVO", "main": true},
+    {"from": "ATIVO", "event": "rcv_datagram", "guard": "checksum_ok",
+     "action": "entregar à aplicação (porta de destino)",
+     "do": ["deliver"], "to": "ATIVO", "main": true},
+    {"from": "ATIVO", "event": "rcv_datagram", "guard": "checksum_bad",
+     "action": "descartar em silêncio (sem avisar o remetente)",
+     "do": ["discard"], "to": "ATIVO", "main": true}
+  ]
+}

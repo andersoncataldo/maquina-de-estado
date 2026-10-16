@@ -1,0 +1,11 @@
+{
+  "name": "rdt1.0 receptor",
+  "description": "Fig. 3.9(b): canal perfeito. Um estado; rdt_rcv(packet) / extract + deliver_data.",
+  "initial": "ESPERA_CHAMADA_DE_BAIXO",
+  "states": ["ESPERA_CHAMADA_DE_BAIXO"],
+  "layout": {"ESPERA_CHAMADA_DE_BAIXO": [380, 150]},
+  "transitions": [
+    {"from": "ESPERA_CHAMADA_DE_BAIXO", "event": "rdt_rcv", "action": "extract(packet, data); deliver_data(data)",
+     "do": ["extract", "deliver_data"], "to": "ESPERA_CHAMADA_DE_BAIXO", "main": true}
+  ]
+}

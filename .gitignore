@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# pasta de registros do GUI
+/relatorio_imagens

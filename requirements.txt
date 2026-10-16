@@ -1,0 +1,3 @@
+# Núcleo e GUI usam apenas a biblioteca padrão (Tkinter vem com o Python).
+pytest>=7        # testes automatizados
+pillow           # opcional: botão "PNG" da GUI (captura de tela)
