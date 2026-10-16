@@ -1,5 +1,8 @@
 # Simulador de Máquina de Estado — Projeto de Redes Convergentes (Unidade 2, Trabalho 2)
 
+> 🎥 **Vídeo Demonstrativo da Aplicação (Item 7.5 do Edital):** [https://youtu.be/ycelCxeP2pM](https://youtu.be/ycelCxeP2pM)  
+> 👤 **Aluno:** Anderson Viana - 2410492 | **Professora:** Ana Maria | **Disciplina:** Projeto de Redes Convergentes  
+
 Aplicação em **Python + Tkinter** que executa, visualiza e testa as máquinas de estado finito do UDP e do
 TCP sobre um canal com falhas configuráveis, verificando automaticamente se cada FSM se comporta como o livro prevê.
 
@@ -45,7 +48,7 @@ estados no diagrama; `main` marca as setas desenhadas. Guardas e primitivas (`do
 valida o rdt 1.0 rodando no mesmo motor genérico, e `engine.validate()` falha cedo se o JSON citar guarda/ação inexistente.
 
 ## Mapa: requisito → onde está
-| Critério | Onde |
+| Critério / Entregável | Onde |
 |---|---|
 | FSM de conexão TCP completa (11 estados, 3 vias, 4 vias, CLOSING, TIME_WAIT 2×MSL, RST) | `fsm_defs/tcp_connection.json`, `simulador/protocols.py` |
 | Transferência confiável (timer, RTT, retransmissão rápida) | `protocols.py`, cenário 6 em `scenarios.py` |
@@ -53,6 +56,8 @@ valida o rdt 1.0 rodando no mesmo motor genérico, e `engine.validate()` falha c
 | Canal e determinismo | `core.py` (seed, perdas, atrasos, relógio virtual) |
 | Interface gráfica | `gui/` (`app.py`, `statediagram.py`, `seqdiagram.py`) |
 | Testes (10 cenários) | `simulador/scenarios.py`, `tests/test_suite.py`, `run_tests.py` |
+| Relatório acadêmico (Item 7.4) | `Relatorio_Trabalho_2_Maquina_de_Estado.pdf` (5 páginas) |
+| Vídeo demonstrativo de 5 min (Item 7.5) | [YouTube: https://youtu.be/ycelCxeP2pM](https://youtu.be/ycelCxeP2pM) |
 
 ## Usando a GUI
 * **Protocolo** (TCP / UDP / Comparar lado a lado) e **Cenário** (os 10 + extras, ou modo livre). Escolher um cenário carrega
